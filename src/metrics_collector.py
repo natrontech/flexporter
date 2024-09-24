@@ -44,13 +44,14 @@ class MetricsCollector:
                                             elif size.endswith("M"):
                                                 total_storage += float(size[:-1]) / 1024
                                             break
-
+                        ipconfig = vm_details.get("ipconfig0", "")
+                        if ipconfig != "":
+                            ipconfig = ipconfig.split("ip=")[1].split(",")[0].split("/")[0]
+                        
                         vm_metrics = {
                             "id": vm["vmid"],
                             "name": vm["name"],
-                            "ip": vm_details.get("ipconfig0", "")
-                            .split(",")[0]
-                            .split("/")[0],
+                            "ip": ipconfig,
                             "cpu_cores": int(vm_details.get("cores", 0)),
                             "memory_gb": int(vm_details.get("memory", 0)) / 1024,
                             "storage_gb": round(total_storage),
