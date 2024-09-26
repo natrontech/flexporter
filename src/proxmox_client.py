@@ -53,7 +53,14 @@ class ProxmoxClient:
                 .content.get(vmid=vmid, content="backup")
             )
             # Get latest backup size and convert to GB
-            return backups[0]["size"] / (1000 ** 3) if backups else 0
+            return backups[0]["size"] / (1000**3) if backups else 0
         except Exception as e:
             print(f"Error fetching backup size for VM {vmid} on node {node}: {str(e)}")
             return 0
+
+    def get_cluster_tags(self):
+        try:
+            return self.client.cluster.tags.get()
+        except Exception as e:
+            print(f"Error fetching cluster tags: {str(e)}")
+            return []

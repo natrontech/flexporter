@@ -53,6 +53,9 @@ flexporter_vm_running{id="vm_id",name="vm_name",pool="pool_name"}
 # HELP flexporter_vm_info VM info
 # TYPE flexporter_vm_info gauge
 flexporter_vm_info{id="vm_id",name="vm_name",pool="pool_name",ip="vm_ip",os_type="vm_os_type",tags="vm_tags"}
+# HELP flexporter_cluster_tags Unique tags used across the cluster
+# TYPE flexporter_cluster_tags gauge
+flexporter_cluster_tags{tag="tag_name"}
 ```
 
 ## Extending the Exporter

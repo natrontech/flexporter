@@ -9,13 +9,13 @@ class PrometheusExporter:
         self.gauges = {
             "vm_count": Gauge("flexporter_vm_count", "Number of VMs", ["pool"]),
             "vm_cpu_cores": Gauge(
-                "flexporter_vm_cpu_cores", 
-                "CPU cores", 
+                "flexporter_vm_cpu_cores",
+                "CPU cores",
                 ["pool", "id", "name"],
             ),
             "vm_vcpus": Gauge(
-                "flexporter_vm_vcpus", 
-                "VM vCPUs", 
+                "flexporter_vm_vcpus",
+                "VM vCPUs",
                 ["pool", "id", "name"],
             ),
             "vm_memory_gb": Gauge(
@@ -43,10 +43,24 @@ class PrometheusExporter:
                 "VM info",
                 ["pool", "id", "name", "ip", "os_type", "tags"],
             ),
+            "cluster_tags": Gauge(
+                "flexporter_cluster_tags",
+                "Unique tags used across the cluster",
+                ["tag"],
+            ),
         }
 
     def update_metrics(self):
-        metrics = self.metrics_collector.collect_metrics()
+        # Collect metrics and all VM tags
+        metrics, all_vm_tags = self.metrics_collector.collect_metrics()
+
+        # Clear existing cluster_tags metrics
+        self.gauges["cluster_tags"].clear()
+
+        # Set the cluster_tags metric for each unique tag
+        for tag in sorted(all_vm_tags):
+            self.gauges["cluster_tags"].labels(tag=tag).set(1)
+
         for pool in metrics:
             pool_name = pool["name"]
             vms = pool["virtual_machines"]
@@ -58,22 +72,34 @@ class PrometheusExporter:
                 vm_name = vm["name"]
 
                 self.gauges["vm_cpu_cores"].labels(
-                    pool=pool_name, id=vm_id, name=vm_name,
+                    pool=pool_name,
+                    id=vm_id,
+                    name=vm_name,
                 ).set(vm["cpu_cores"])
                 self.gauges["vm_vcpus"].labels(
-                    pool=pool_name, id=vm_id, name=vm_name,
+                    pool=pool_name,
+                    id=vm_id,
+                    name=vm_name,
                 ).set(vm["vcpus"])
                 self.gauges["vm_memory_gb"].labels(
-                    pool=pool_name, id=vm_id, name=vm_name,
+                    pool=pool_name,
+                    id=vm_id,
+                    name=vm_name,
                 ).set(vm["memory_gb"])
                 self.gauges["vm_storage_gb"].labels(
-                    pool=pool_name, id=vm_id, name=vm_name,
+                    pool=pool_name,
+                    id=vm_id,
+                    name=vm_name,
                 ).set(vm["storage_gb"])
                 self.gauges["vm_backup_storage_gb"].labels(
-                    pool=pool_name, id=vm_id, name=vm_name,
+                    pool=pool_name,
+                    id=vm_id,
+                    name=vm_name,
                 ).set(vm["backup_storage_gb"])
                 self.gauges["vm_running"].labels(
-                    pool=pool_name, id=vm_id, name=vm_name,
+                    pool=pool_name,
+                    id=vm_id,
+                    name=vm_name,
                 ).set(1 if vm["status"] == "running" else 0)
                 self.gauges["vm_info"].labels(
                     pool=pool_name,
@@ -81,7 +107,7 @@ class PrometheusExporter:
                     name=vm_name,
                     ip=vm["ip"],
                     os_type=vm["os_type"],
-                    tags=",".join(vm["tags"]),
+                    tags=",".join(sorted(vm["tags"])),
                 ).set(1)
 
     def run(self, port=8000):

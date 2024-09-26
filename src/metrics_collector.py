@@ -1,4 +1,4 @@
-import math
+import logging
 
 from .proxmox_client import ProxmoxClient
 
@@ -10,6 +10,7 @@ class MetricsCollector:
     def collect_metrics(self):
         metrics = []
         pools = self.proxmox_client.get_pools()
+        all_vm_tags = set()
 
         for pool in pools:
             pool_metrics = {"name": pool["poolid"], "virtual_machines": []}
@@ -29,25 +30,37 @@ class MetricsCollector:
                         # Calculate total storage
                         total_storage = 0
                         for key, value in vm_details.items():
-                            if (
-                                key.startswith("scsi")
-                                or key.startswith("ide")
-                                or key.startswith("sata")
+                            if key.startswith(("scsi", "ide", "sata")) and isinstance(
+                                value, str
                             ):
-                                if isinstance(value, str):
-                                    size_parts = value.split(",")
-                                    for part in size_parts:
-                                        if part.startswith("size="):
-                                            size = part.split("=")[1]
-                                            if size.endswith("G"):
-                                                total_storage += float(size[:-1])
-                                            elif size.endswith("M"):
-                                                total_storage += float(size[:-1]) / 1024
-                                            break
+                                size_parts = value.split(",")
+                                for part in size_parts:
+                                    if part.startswith("size="):
+                                        size = part.split("=")[1]
+                                        if size.endswith("G"):
+                                            total_storage += float(size[:-1])
+                                        elif size.endswith("M"):
+                                            total_storage += float(size[:-1]) / 1024
+                                        break
+
+                        # Get IP configuration
                         ipconfig = vm_details.get("ipconfig0", "")
-                        if ipconfig != "":
-                            ipconfig = ipconfig.split("ip=")[1].split(",")[0].split("/")[0]
-                        
+                        if ipconfig:
+                            ipconfig = (
+                                ipconfig.split("ip=")[1].split(",")[0].split("/")[0]
+                            )
+
+                        # Collect VM tags
+                        vm_tags = set()
+                        tags_field = vm_details.get("tags", "")
+                        if tags_field:
+                            # Split tags by commas and semicolons
+                            tag_items = tags_field.replace(";", ",").split(",")
+                            vm_tags = {tag.strip() for tag in tag_items if tag.strip()}
+
+                        # Add tags to the set of all VM tags
+                        all_vm_tags.update(vm_tags)
+
                         vm_metrics = {
                             "id": vm["vmid"],
                             "name": vm["name"],
@@ -62,11 +75,7 @@ class MetricsCollector:
                                 )
                             ),
                             "os_type": vm_details.get("ostype", ""),
-                            "tags": (
-                                vm_details.get("tags", "").split(",")
-                                if vm_details.get("tags")
-                                else []
-                            ),
+                            "tags": list(vm_tags),
                             "status": vm_status.get("status", ""),
                         }
                         pool_metrics["virtual_machines"].append(vm_metrics)
@@ -77,4 +86,4 @@ class MetricsCollector:
 
             metrics.append(pool_metrics)
 
-        return metrics
+        return metrics, all_vm_tags
