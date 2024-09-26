@@ -53,6 +53,7 @@ class MetricsCollector:
                             "name": vm["name"],
                             "ip": ipconfig,
                             "cpu_cores": int(vm_details.get("cores", 0)),
+                            "vcpus": int(vm_details.get("vcpus", 0)),
                             "memory_gb": int(vm_details.get("memory", 0)) / 1024,
                             "storage_gb": round(total_storage),
                             "backup_storage_gb": round(

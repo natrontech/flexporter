@@ -26,12 +26,34 @@ The exporter will be available at `http://localhost:8000`.
 
 ## Metrics
 
-The following metrics are exported, grouped by Proxmox pool:
-- Number of virtual machines
-- Total CPU cores
-- Total memory in GB
-- Total disk size in GB
-- Total backup size in GB
+The following metrics are exported:
+
+```shell
+# HELP flexporter_vm_count Number of VMs
+# TYPE flexporter_vm_count gauge
+flexporter_vm_count{pool="pool_name}
+# HELP flexporter_vm_cpu_cores CPU cores
+# TYPE flexporter_vm_cpu_cores gauge
+flexporter_vm_cpu_cores{id="vm_id",name="vm_name",pool="pool_name"}
+# HELP flexporter_vm_vcpus VM vCPUs
+# TYPE flexporter_vm_vcpus gauge
+flexporter_vm_vcpus{id="vm_id",name="vm_name",pool="pool_name"}
+# HELP flexporter_vm_memory_gb VM memory in GB
+# TYPE flexporter_vm_memory_gb gauge
+flexporter_vm_memory_gb{id="vm_id",name="vm_name",pool="pool_name"}
+# HELP flexporter_vm_total_disk_gb VM disk in GB
+# TYPE flexporter_vm_total_disk_gb gauge
+flexporter_vm_total_disk_gb{id="vm_id",name="vm_name",pool="pool_name"}
+# HELP flexporter_vm_total_backup_gb VM backup in GB
+# TYPE flexporter_vm_total_backup_gb gauge
+flexporter_vm_total_backup_gb{id="vm_id",name="vm_name",pool="pool_name"}
+# HELP flexporter_vm_running VM running status
+# TYPE flexporter_vm_running gauge
+flexporter_vm_running{id="vm_id",name="vm_name",pool="pool_name"}
+# HELP flexporter_vm_info VM info
+# TYPE flexporter_vm_info gauge
+flexporter_vm_info{id="vm_id",name="vm_name",pool="pool_name",ip="vm_ip",os_type="vm_os_type",tags="vm_tags"}
+```
 
 ## Extending the Exporter
 
