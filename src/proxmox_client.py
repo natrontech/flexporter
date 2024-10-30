@@ -4,7 +4,7 @@ from proxmoxer import ProxmoxAPI
 
 from .config import (
     PROXMOX_BACKUP_STORAGE,
-    PROXMOX_ENDPOINT,
+    PROXMOX_ENDPOINTS,
     PROXMOX_PASSWORD,
     PROXMOX_USER,
     PROXMOX_VERIFY_SSL,
@@ -16,14 +16,28 @@ logger = logging.getLogger(__name__)
 
 class ProxmoxClient:
     def __init__(self):
-        logger.info(f"Connecting to Proxmox API at {PROXMOX_ENDPOINT}")
-        self.client = ProxmoxAPI(
-            PROXMOX_ENDPOINT,
-            user=PROXMOX_USER,
-            password=PROXMOX_PASSWORD,
-            verify_ssl=PROXMOX_VERIFY_SSL,
-        )
-        logger.info("Connected to Proxmox API")
+        self.client = None
+        self.connected_endpoint = None
+
+        for endpoint in PROXMOX_ENDPOINTS:
+            try:
+                logger.info(f"Attempting to connect to Proxmox API at {endpoint}")
+                self.client = ProxmoxAPI(
+                    endpoint,
+                    user=PROXMOX_USER,
+                    password=PROXMOX_PASSWORD,
+                    verify_ssl=PROXMOX_VERIFY_SSL,
+                )
+                self.connected_endpoint = endpoint
+                logger.info(f"Successfully connected to Proxmox API at {endpoint}")
+                break
+            except Exception as e:
+                logger.warning(
+                    f"Failed to connect to Proxmox API at {endpoint}: {str(e)}"
+                )
+
+        if self.client is None:
+            raise Exception("Unable to connect to any Proxmox API endpoint")
 
     def get_pools(self):
         return self.client.pools.get()
