@@ -71,6 +71,11 @@ class PrometheusExporter:
                 vm_id = str(vm["id"])
                 vm_name = vm["name"]
 
+                # Set default empty strings for optional fields if they are missing
+                vm_ip = vm.get("ip", "")
+                vm_os_type = vm.get("os_type", "")
+                vm_tags = ",".join(sorted(vm.get("tags", []))) if vm.get("tags") else ""
+
                 self.gauges["vm_cpu_cores"].labels(
                     pool=pool_name,
                     id=vm_id,
@@ -105,9 +110,9 @@ class PrometheusExporter:
                     pool=pool_name,
                     id=vm_id,
                     name=vm_name,
-                    ip=vm["ip"],
-                    os_type=vm["os_type"],
-                    tags=",".join(sorted(vm["tags"])),
+                    ip=vm_ip,
+                    os_type=vm_os_type,
+                    tags=vm_tags,
                 ).set(1)
 
     def run(self, port=8000):
