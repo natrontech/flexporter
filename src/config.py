@@ -1,6 +1,10 @@
 import os
 
-PROXMOX_ENDPOINT = os.getenv("PROXMOX_ENDPOINT", "10.10.10.10:8006")
+PROXMOX_ENDPOINTS = [
+    os.getenv(f"PROXMOX_ENDPOINT_{i}") for i in range(10)
+]  # Support up to 10 nodes
+PROXMOX_ENDPOINTS = [e for e in PROXMOX_ENDPOINTS if e]  # Remove None values
+
 PROXMOX_USER = os.getenv("PROXMOX_USER", "root@pam")
 PROXMOX_PASSWORD = os.getenv("PROXMOX_PASSWORD", "password")
 PROXMOX_VERIFY_SSL = (
